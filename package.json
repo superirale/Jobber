@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,15 +12,16 @@
   "description": "",
   "dependencies": {
     "bottleneck": "^2.19.5",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "node-cache": "^5.1.2",
     "node-cron": "^3.0.3",
     "puppeteer-core": "^24.4.0",
-    "typescript": "^5.8.2",
     "winston": "^3.17.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@types/puppeteer": "^5.4.7"
+    "@types/puppeteer": "^5.4.7",
+    "typescript": "^5.8.2"
   }
 }
