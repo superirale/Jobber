@@ -2,3 +2,4 @@ node_modules
 scraper.log
 *.html
 dist
+.env

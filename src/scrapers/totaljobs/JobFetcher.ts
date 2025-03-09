@@ -7,11 +7,11 @@ interface ScrapedJob {
   url: string;
   location: string;
   salary: string;
-  // date: string;
+  date: string;
   company: string;
 }
 
-async function scrapeJobUrls(): Promise<ScrapedJob[]> {
+async function scrapeJobUrls(url: string, pages: number): Promise<ScrapedJob[]> {
   const browser = await puppeteer.launch({
     executablePath:
       "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
@@ -25,63 +25,72 @@ async function scrapeJobUrls(): Promise<ScrapedJob[]> {
   await page.setViewport({ width: 1366, height: 768 });
 
   try {
-    logger.debug("starting...");
 
-    // Replace with actual URL or use local HTML file
-    await page.goto("https://www.totaljobs.com/jobs/software-engineer", {
-      waitUntil: "domcontentloaded",
-      timeout: 30000,
-    });
+    const jobs = [];
 
-    // Wait for job listings to load
-    await page.waitForSelector('article[data-at="job-item"]', {
-      timeout: 15000,
-    });
+    for (let i = 0; i < pages; i++) {
+      let fullUrl = i > 0 ? url + `&page=${i+1}` : url;
 
-    const jobs = await page.evaluate(() => {
-      const jobElements = Array.from(
-        document.querySelectorAll<HTMLElement>('article[data-at="job-item"]')
-      );
+      await page.goto(fullUrl, {
+        waitUntil: "domcontentloaded",
+        timeout: 30000,
+      });
 
-      return jobElements.map((job) => {
-        const extractText = (selector: string) =>
-          job.querySelector(selector)?.textContent?.trim() || "Not specified";
-        const dateElement = job.querySelector(
-          'time[data-at="job-item-timeago"]'
+      // Wait for job listings to load
+      await page.waitForSelector('article[data-at="job-item"]', {
+        timeout: 15000,
+      });
+
+      const pageJobs = await page.evaluate(() => {
+        const jobElements = Array.from(
+          document.querySelectorAll<HTMLElement>('article[data-at="job-item"]')
         );
 
-        return {
-          title: extractText("h2.res-1tassqi a.res-1foik6i"),
-          company: extractText(
-            'div.res-1r68twq [data-at="job-item-company-name"] span.res-btchsq'
-          ),
-          location: extractText(
-            'div.res-qchjmw [data-at="job-item-location"] span.res-btchsq'
-          ),
-          salary: extractText(
-            'div.res-lgmafx [data-at="job-item-salary-info"]'
-          ),
-          url: `https://www.totaljobs.com${job
-            .querySelector("h2.res-1tassqi a.res-1foik6i")
-            ?.getAttribute("href")}`,
-          rawDate: dateElement?.getAttribute("datetime") || "",
-        };
-      });
-    });
+        return jobElements.map((job) => {
+          const extractText = (selector: string) =>
+            job.querySelector(selector)?.textContent?.trim() || "Not specified";
+          const dateElement = job.querySelector(
+            'time[data-at="job-item-timeago"]'
+          );
 
+          return {
+            title: extractText("h2.res-1tassqi a.res-1foik6i"),
+            company: extractText(
+              'div.res-1r68twq [data-at="job-item-company-name"] span.res-btchsq'
+            ),
+            location: extractText(
+              'div.res-qchjmw [data-at="job-item-location"] span.res-btchsq'
+            ),
+            salary: extractText(
+              'div.res-lgmafx [data-at="job-item-salary-info"]'
+            ),
+            url: `https://www.totaljobs.com${job
+              .querySelector("h2.res-1tassqi a.res-1foik6i")
+              ?.getAttribute("href")}`,
+            rawDate: dateElement?.getAttribute("datetime") || "",
+          };
+        });
+      });
+
+      const processedJobs = pageJobs
+      .filter(job => job.url !== 'https://www.totaljobs.comundefined')
+      .map(job => ({
+        ...job,
+        date: job.rawDate ? format(new Date(job.rawDate), 'yyyy-MM-dd') : 'Date not available'
+      }));
+      jobs.push(...processedJobs);
+    }
     await browser.close();
-    return jobs.filter(
-      (job) => job.url !== "https://www.totaljobs.comundefined"
-    );
+    return jobs;
   } catch (error) {
     console.error("Scraping failed:", error);
     await browser.close();
     return [];
   }
 }
-
+const url = "https://www.totaljobs.com/jobs/software-engineer?sort=2&action=sort_publish";
 // Run the scraper
-scrapeJobUrls()
+scrapeJobUrls(url, 3)
   .then((jobs) => {
     logger.info(`Found ${jobs.length} jobs:`);
     jobs.forEach((job, index) => {
