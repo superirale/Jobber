@@ -1,17 +1,13 @@
 import puppeteer from "puppeteer-core";
+import "dotenv/config";
 import logger from "../../Logger";
 import { format } from "date-fns";
+import { ScrapedJob } from "../../Contracts/IJobs";
+import { sendJobsToTelegram } from "../../Utils";
 
-interface ScrapedJob {
-  title: string;
-  url: string;
-  location: string;
-  salary: string;
-  date: string;
-  company: string;
-}
+const chatId = process.env.TELEGRAM_CHAT_ID || "";
 
-async function scrapeJobUrls(url: string, pages: number): Promise<ScrapedJob[]> {
+async function scrapeJobs(url: string, pages: number): Promise<ScrapedJob[]> {
   const browser = await puppeteer.launch({
     executablePath:
       "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
@@ -25,11 +21,10 @@ async function scrapeJobUrls(url: string, pages: number): Promise<ScrapedJob[]> 
   await page.setViewport({ width: 1366, height: 768 });
 
   try {
-
     const jobs = [];
 
     for (let i = 0; i < pages; i++) {
-      let fullUrl = i > 0 ? url + `&page=${i+1}` : url;
+      let fullUrl = i > 0 ? url + `&page=${i + 1}` : url;
 
       await page.goto(fullUrl, {
         waitUntil: "domcontentloaded",
@@ -73,11 +68,13 @@ async function scrapeJobUrls(url: string, pages: number): Promise<ScrapedJob[]> 
       });
 
       const processedJobs = pageJobs
-      .filter(job => job.url !== 'https://www.totaljobs.comundefined')
-      .map(job => ({
-        ...job,
-        date: job.rawDate ? format(new Date(job.rawDate), 'yyyy-MM-dd') : 'Date not available'
-      }));
+        .filter((job) => job.url !== "https://www.totaljobs.comundefined")
+        .map((job) => ({
+          ...job,
+          date: job.rawDate
+            ? format(new Date(job.rawDate), "yyyy-MM-dd")
+            : "Date not available",
+        }));
       jobs.push(...processedJobs);
     }
     await browser.close();
@@ -88,17 +85,17 @@ async function scrapeJobUrls(url: string, pages: number): Promise<ScrapedJob[]> 
     return [];
   }
 }
-const url = "https://www.totaljobs.com/jobs/software-engineer?sort=2&action=sort_publish";
+const url =
+  "https://www.totaljobs.com/jobs/software-engineer?sort=2&action=sort_publish";
 // Run the scraper
-scrapeJobUrls(url, 3)
+scrapeJobs(url, 1)
   .then((jobs) => {
     logger.info(`Found ${jobs.length} jobs:`);
-    jobs.forEach((job, index) => {
-      console.log(`#${index + 1} ${job.title}`);
-      console.log(`🏢 Company: ${job.company}`);
-      console.log(`📍 Location: ${job.location}`);
-      console.log(`💰 Salary: ${job.salary}`);
-      console.log(`🔗 URL: ${job.url}\n`);
-    });
+    sendJobsToTelegram(chatId, jobs, {
+      delayBetweenMessages: 2000, // 2 seconds between messages
+      maxMessagesPerBatch: 5, // Send 5 messages at a time
+    })
+      .then(() => console.log("Notification process completed"))
+      .catch(console.error);
   })
   .catch(console.error);
