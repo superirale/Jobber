@@ -1,0 +1,50 @@
+{
+  "compilerOptions": {
+    /* Basic Configuration */
+    "target": "ES2020", // Modern ECMAScript version
+    "module": "NodeNext", // Use Node.js module resolution
+    "moduleResolution": "NodeNext", // Align with Node.js module system
+    "outDir": "./dist", // Output directory
+    "rootDir": "./src", // Source directory
+    "sourceMap": true, // Generate source maps for debugging
+    "inlineSources": true, // Combine source with source maps
+
+    /* Strict Type-Checking */
+    "strict": true, // Enable all strict type checks
+    "noImplicitAny": true, // Prevent implicit 'any' types
+    "strictNullChecks": true, // Enable strict null checks
+    "strictFunctionTypes": true, // Strict function type checking
+
+    /* Library Configuration */
+    "lib": ["ES2020", "DOM"], // Needed for browser-like environments (Puppeteer)
+
+    /* Module Handling */
+    "esModuleInterop": true, // Allow ES6 modules with CommonJS
+    "resolveJsonModule": true, // Import JSON files
+
+    /* Output Control */
+    "declaration": true, // Generate .d.ts files
+    "removeComments": false, // Keep comments in output
+    "pretty": true, // Format error messages
+
+    /* Advanced */
+    "skipLibCheck": true, // Skip library declaration checks (faster builds)
+    "forceConsistentCasingInFileNames": true,
+    "noEmitOnError": true, // Don't output on compilation errors
+
+    /* Experimental */
+    "experimentalDecorators": true, // Needed for some ORM libraries
+    "emitDecoratorMetadata": true // Needed for reflection-based libraries
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts", // If you have tests
+    "types/**/*.d.ts" // Custom type declarations
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts", // Exclude test files if needed
+    "**/*.test.ts"
+  ]
+}
