@@ -62,3 +62,9 @@ export const sendJobsToTelegram = async (
     throw error;
   }
 };
+
+export const saveJobsInDB = (data: ScrapedJob): void => {};
+
+export const IsJobinDB = (url: string): boolean => {
+  return true;
+};

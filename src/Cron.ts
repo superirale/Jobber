@@ -2,22 +2,38 @@ import cron from "node-cron";
 import logger from "./Logger";
 import "dotenv/config";
 import scrapeJobs from "./Scrapers/Totaljobs/JobsScraper";
-import { sendJobsToTelegram } from "./Utils";
+import { IsJobinDB, sendJobsToTelegram } from "./Utils";
+import { JobSite, ScrapedJob, Subscription } from "./Contracts/IJobs";
 
 const chatId = process.env.TELEGRAM_CHAT_ID || "";
-const urls: string[] = [
-  "https://www.totaljobs.com/jobs/software-engineer?sort=2&action=sort_publish",
-];
+const subs: Subscription = {
+  174068618: [
+    {
+      url: "https://www.totaljobs.com/jobs/software-engineer?sort=2&action=sort_publish",
+      site: JobSite.totaljobs,
+      pages: 1,
+    },
+  ],
+};
 
 // Run every 30 minutes
 cron.schedule("*/1 * * * *", async () => {
-  logger.info("Starting scheduled scrape");
-  for await (let url of urls) {
-    const jobs = await scrapeJobs(url, 3);
+  logger.info("Starting scheduled job scraper");
+  for await (let [chatId, subscriptions] of Object.entries(subs)) {
+    for await (let subscription of subscriptions) {
+      const { url, pages } = subscription;
 
-    sendJobsToTelegram(chatId, jobs, {
-      delayBetweenMessages: 2000, // 2 seconds between messages
-      maxMessagesPerBatch: 5, // Send 5 messages at a time
-    });
+      const scrapedJobs = await scrapeJobs(url, pages);
+      const jobs = scrapedJobs.filter((sJob) => {
+        const jobExists = IsJobinDB(sJob.url);
+        if (!jobExists) return;
+        return sJob;
+      });
+
+      sendJobsToTelegram(chatId, jobs, {
+        delayBetweenMessages: 2000, // 2 seconds between messages
+        maxMessagesPerBatch: 5, // Send 5 messages at a time
+      });
+    }
   }
 });

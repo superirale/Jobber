@@ -12,10 +12,10 @@ export enum JobSite {
   totaljobs = "totaljobs",
 }
 
-export interface Subscription {
-  [chatId: number]: {
-    site: JobSite;
-    url: string;
-    pages: number;
-  }[];
+export interface SubscriptionItem {
+  url: string;
+  site: JobSite;
+  pages: number;
 }
+
+export type Subscription = Record<number, SubscriptionItem[]>;
