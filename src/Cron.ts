@@ -15,16 +15,6 @@ const subs: Subscription = {
   ],
 };
 
-// (async() => {
-//     const sJob = {url: "11111", page: 3, title: "", salary: ""} as unknown as ScrapedJob;
-//     await saveJobsInDB(sJob);
-
-//     const jobExists = await isJobInDB(sJob.url);
-//     if (!jobExists) {
-//         console.log("does not exists");
-//     }
-// })();
-
 // Run every 30 minutes
 cron.schedule("*/1 * * * *", async () => {
   logger.info("Starting scheduled job scraper");
