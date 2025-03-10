@@ -3,7 +3,7 @@ import logger from "./Logger";
 import "dotenv/config";
 import scrapeJobs from "./Scrapers/Totaljobs/JobsScraper";
 import { isJobInDB, saveJobsInDB, sendJobsToTelegram } from "./Utils";
-import { JobSite, ScrapedJob, Subscription } from "./Contracts/IJobs";
+import { JobSite, Subscription } from "./Contracts/IJobs";
 
 const subs: Subscription = {
   174068618: [
@@ -14,9 +14,10 @@ const subs: Subscription = {
     },
   ],
 };
+// Run at designated time or default to 10 am every day
+const cronInterval = process.env.SCRAPE_INTERVAL || "0 10 * * *";
 
-// Run every 30 minutes
-cron.schedule("*/1 * * * *", async () => {
+cron.schedule(cronInterval, async () => {
   logger.info("Starting scheduled job scraper");
   for await (let [chatId, subscriptions] of Object.entries(subs)) {
     for await (let subscription of subscriptions) {
