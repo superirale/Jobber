@@ -2,10 +2,9 @@ import cron from "node-cron";
 import logger from "./Logger";
 import "dotenv/config";
 import scrapeJobs from "./Scrapers/Totaljobs/JobsScraper";
-import { IsJobinDB, sendJobsToTelegram } from "./Utils";
+import { isJobInDB, saveJobsInDB, sendJobsToTelegram } from "./Utils";
 import { JobSite, ScrapedJob, Subscription } from "./Contracts/IJobs";
 
-const chatId = process.env.TELEGRAM_CHAT_ID || "";
 const subs: Subscription = {
   174068618: [
     {
@@ -16,6 +15,16 @@ const subs: Subscription = {
   ],
 };
 
+// (async() => {
+//     const sJob = {url: "11111", page: 3, title: "", salary: ""} as unknown as ScrapedJob;
+//     await saveJobsInDB(sJob);
+
+//     const jobExists = await isJobInDB(sJob.url);
+//     if (!jobExists) {
+//         console.log("does not exists");
+//     }
+// })();
+
 // Run every 30 minutes
 cron.schedule("*/1 * * * *", async () => {
   logger.info("Starting scheduled job scraper");
@@ -24,15 +33,19 @@ cron.schedule("*/1 * * * *", async () => {
       const { url, pages } = subscription;
 
       const scrapedJobs = await scrapeJobs(url, pages);
-      const jobs = scrapedJobs.filter((sJob) => {
-        const jobExists = IsJobinDB(sJob.url);
-        if (!jobExists) return;
-        return sJob;
-      });
+      const jobs = await Promise.all(
+        scrapedJobs.map(async (sJob) => {
+          const jobExists = await isJobInDB(sJob.url);
+          if (!jobExists) {
+            await saveJobsInDB(sJob);
+            return sJob;
+          }
+        })
+      ).then((results) => results.filter((job) => job !== undefined));
 
       sendJobsToTelegram(chatId, jobs, {
         delayBetweenMessages: 2000, // 2 seconds between messages
-        maxMessagesPerBatch: 5, // Send 5 messages at a time
+        maxMessagesPerBatch: 10, // Send 5 messages at a time
       });
     }
   }

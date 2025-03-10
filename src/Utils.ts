@@ -1,7 +1,10 @@
 import TelegramBot from "node-telegram-bot-api";
+import "dotenv/config";
 import { ScrapedJob } from "./Contracts/IJobs";
+const nano = require("nano")(process.env.COUCHDB_URL);
 
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN || "";
+const db = nano.use("scraped-jobs");
 
 const bot = new TelegramBot(telegramBotToken, { polling: false });
 
@@ -63,8 +66,26 @@ export const sendJobsToTelegram = async (
   }
 };
 
-export const saveJobsInDB = (data: ScrapedJob): void => {};
+export const saveJobsInDB = async (data: ScrapedJob): Promise<void> => {
+  const { url } = data;
+  const isJobExisting = await isJobInDB(url);
 
-export const IsJobinDB = (url: string): boolean => {
+  if (!isJobExisting) {
+    db.insert(data);
+  }
+};
+
+export const isJobInDB = async (url: string): Promise<boolean> => {
+  const q = {
+    selector: {
+      url: { $eq: url },
+    },
+    limit: 1,
+  };
+  const jobs = await db.find(q);
+
+  if (jobs.docs.length == 0) {
+    return false;
+  }
   return true;
 };
