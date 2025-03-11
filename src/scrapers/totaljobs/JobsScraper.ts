@@ -84,17 +84,3 @@ async function scrapeJobs(url: string, pages: number): Promise<ScrapedJob[]> {
 }
 
 export default scrapeJobs;
-// const url =
-//   "https://www.totaljobs.com/jobs/software-engineer?sort=2&action=sort_publish";
-// // Run the scraper
-// scrapeJobs(url, 1)
-//   .then((jobs) => {
-//     logger.info(`Found ${jobs.length} jobs:`);
-//     sendJobsToTelegram(chatId, jobs, {
-//       delayBetweenMessages: 2000, // 2 seconds between messages
-//       maxMessagesPerBatch: 5, // Send 5 messages at a time
-//     })
-//       .then(() => console.log("Notification process completed"))
-//       .catch(console.error);
-//   })
-//   .catch(console.error);
