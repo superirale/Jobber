@@ -3,7 +3,6 @@ import "dotenv/config";
 import { format } from "date-fns";
 import { ScrapedJob } from "../../Contracts/IJobs";
 
-
 async function scrapeJobs(url: string, pages: number): Promise<ScrapedJob[]> {
   const browser = await puppeteer.launch({
     executablePath:
@@ -74,12 +73,12 @@ async function scrapeJobs(url: string, pages: number): Promise<ScrapedJob[]> {
         }));
       jobs.push(...processedJobs);
     }
-    await browser.close();
     return jobs;
   } catch (error) {
     console.error("Scraping failed:", error);
-    await browser.close();
     return [];
+  } finally {
+    await browser.close();
   }
 }
 
