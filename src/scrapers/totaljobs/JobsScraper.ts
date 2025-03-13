@@ -2,11 +2,13 @@ import puppeteer from "puppeteer-core";
 import "dotenv/config";
 import { format } from "date-fns";
 import { ScrapedJob } from "../../Contracts/IJobs";
+import logger from "../../Logger";
 
 async function scrapeJobs(url: string, pages: number): Promise<ScrapedJob[]> {
   const browser = await puppeteer.launch({
     executablePath:
       "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      headless: false,
   });
   const page = await browser.newPage();
 
@@ -27,9 +29,12 @@ async function scrapeJobs(url: string, pages: number): Promise<ScrapedJob[]> {
         timeout: 30000,
       });
 
+  
       // Wait for job listings to load
       await page.waitForSelector('article[data-at="job-item"]', {
-        timeout: 15000,
+        timeout: 30000,
+      }).catch(err => {
+        logger.info("no results found");
       });
 
       const pageJobs = await page.evaluate(() => {
