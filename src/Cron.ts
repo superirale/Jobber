@@ -10,6 +10,7 @@ const subs: Subscription = {
       url: "https://www.totaljobs.com/jobs/software-engineer?sort=2&action=sort_publish",
       site: JobSite.totaljobs,
       pages: 3,
+      keywords: ["software engineer", "software developer"],
     },
     {
       url: "https://www.totaljobs.com/jobs/backend-engineer?sort=2&action=sort_publish",
@@ -35,11 +36,14 @@ const subs: Subscription = {
   logger.info("Starting scheduled job scraper");
   for await (let [chatId, subscriptions] of Object.entries(subs)) {
     for await (let subscription of subscriptions) {
-      const { url, pages } = subscription;
+      const { url, pages, keywords } = subscription;
 
       const scrapedJobs = await scrapeJobs(url, pages);
       const jobs = await Promise.all(
         scrapedJobs.map(async (sJob) => {
+          if (keywords && !keywords.includes(sJob.title.toLowerCase())) {
+            return;
+          }
           const jobExists = await isJobInDB(sJob.url);
           if (!jobExists) {
             await saveJobsInDB(sJob);

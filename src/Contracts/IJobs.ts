@@ -16,6 +16,7 @@ export interface SubscriptionItem {
   url: string;
   site: JobSite;
   pages: number;
+  keywords?: string[];
 }
 
 export type Subscription = Record<number, SubscriptionItem[]>;
