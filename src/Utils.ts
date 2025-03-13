@@ -1,6 +1,8 @@
+import { promises as fs } from "fs";
+
 import TelegramBot from "node-telegram-bot-api";
 import "dotenv/config";
-import { ScrapedJob } from "./Contracts/IJobs";
+import { ScrapedJob, Subscription } from "./Contracts/IJobs";
 const nano = require("nano")(process.env.COUCHDB_URL);
 
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN || "";
@@ -88,4 +90,11 @@ export const isJobInDB = async (url: string): Promise<boolean> => {
     return false;
   }
   return true;
+};
+
+export const loadSubscriptions = async (
+  path: string
+): Promise<Subscription> => {
+  const rawData = await fs.readFile(path, "utf-8");
+  return JSON.parse(rawData) as Subscription;
 };

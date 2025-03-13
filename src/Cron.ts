@@ -1,39 +1,21 @@
 import logger from "./Logger";
 import "dotenv/config";
 import scrapeJobs from "./Scrapers/Totaljobs/JobsScraper";
-import { isJobInDB, saveJobsInDB, sendJobsToTelegram } from "./Utils";
-import { JobSite, Subscription } from "./Contracts/IJobs";
-
-const subs: Subscription = {
-  174068618: [
-    {
-      url: "https://www.totaljobs.com/jobs/software-engineer?sort=2&action=sort_publish",
-      site: JobSite.totaljobs,
-      pages: 3,
-      keywords: ["software engineer", "software developer"],
-    },
-    {
-      url: "https://www.totaljobs.com/jobs/backend-engineer?sort=2&action=sort_publish",
-      site: JobSite.totaljobs,
-      pages: 3,
-    },
-    {
-      url: "https://www.totaljobs.com/jobs/backend-nodejs-developer?sort=2&action=sort_publish&q=Backend+Node.Js+Developer",
-      site: JobSite.totaljobs,
-      pages: 3,
-    },
-  ],
-  7909831268: [
-    {
-      url: "https://www.totaljobs.com/jobs/labourer-cscs-card/in-doncaster?radius=10&sort=2&action=sort_publish",
-      site: JobSite.totaljobs,
-      pages: 2,
-    },
-  ],
-};
+import {
+  isJobInDB,
+  loadSubscriptions,
+  saveJobsInDB,
+  sendJobsToTelegram,
+} from "./Utils";
+import { Subscription } from "./Contracts/IJobs";
 
 (async () => {
+  const subs: Subscription = await loadSubscriptions(
+    process.env.SUBSCRIPTION_FILE || ""
+  );
+
   logger.info("Starting scheduled job scraper");
+
   for await (let [chatId, subscriptions] of Object.entries(subs)) {
     for await (let subscription of subscriptions) {
       const { url, pages, keywords } = subscription;
