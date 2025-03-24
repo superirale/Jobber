@@ -52,9 +52,10 @@ async function scrapeJobs(url: string, pages: number): Promise<ScrapedJob[]> {
             title: extractText(""),
             company: extractText(""),
             location: extractText(""),
-            salary: extractText(),
+            salary: extractText(""),
             url: `${job.querySelector("")?.getAttribute("href")}`,
             rawDate: dateElement?.getAttribute("") || "",
+            date: "",
           };
         });
       });
