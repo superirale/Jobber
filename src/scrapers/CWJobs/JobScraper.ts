@@ -8,7 +8,7 @@ async function scrapeJobs(url: string, pages: number): Promise<ScrapedJob[]> {
   const browser = await puppeteer.launch({
     executablePath:
       "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    headless: false,
+    headless: true,
   });
   const page = await browser.newPage();
 
